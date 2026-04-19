@@ -1,3 +1,12 @@
+---
+title: RAG Chatbot
+emoji: 🤖
+colorFrom: purple
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 # 🤖 Production RAG Chatbot
 
 > Ask questions about any document and get grounded, cited answers powered by **Llama 3.1** (Groq) + **ChromaDB** + **LangChain**
