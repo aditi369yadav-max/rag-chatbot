@@ -1,3 +1,5 @@
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-HuggingFace-yellow)](https://aditi01111111-rag-chatbot.hf.space)
+
 ---
 title: RAG Chatbot
 emoji: 🤖
