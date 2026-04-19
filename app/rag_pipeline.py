@@ -19,6 +19,8 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
 from app.logger import logger
+from dotenv import load_dotenv
+load_dotenv()
 
 
 RAG_PROMPT = PromptTemplate.from_template("""
