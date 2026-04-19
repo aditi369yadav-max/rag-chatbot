@@ -1,8 +1,19 @@
 # 🤖 Production RAG Chatbot
 
-A **resume-worthy, production-grade** Retrieval-Augmented Generation (RAG) chatbot with evaluation metrics, observability, document upload, and a beautiful dark-mode UI.
+> Ask questions about any document and get grounded, cited answers powered by **Llama 3.1** (Groq) + **ChromaDB** + **LangChain**
 
-> Built with LangChain · OpenAI · ChromaDB · FastAPI · RAGAS
+---
+
+## 🎬 Demo Screenshots
+
+### Chat with grounded answer + source citation
+![Chat Demo](screenshots/chat-demo.jpg)
+
+### Ask questions about your own resume PDF
+![Resume Query](screenshots/resume-query.jpg)
+
+### Upload any document — PDF, TXT, Markdown
+![Upload Feature](screenshots/upload.jpg)
 
 ---
 
@@ -10,191 +21,123 @@ A **resume-worthy, production-grade** Retrieval-Augmented Generation (RAG) chatb
 
 | Feature | Details |
 |---|---|
-| Document ingestion | PDF, TXT, Markdown via upload or directory |
-| Smart chunking | RecursiveCharacterTextSplitter (512 tokens, 64 overlap) |
-| Embeddings | OpenAI `text-embedding-3-small` |
-| Vector store | ChromaDB (local) — swap to Pinecone for production |
-| Retrieval | MMR (Maximum Marginal Relevance) top-5 |
-| LLM | GPT-4o-mini with grounded prompt |
-| Streaming | Server-Sent Events `/chat/stream` endpoint |
-| Evaluation | RAGAS — faithfulness, answer relevancy, context recall |
-| Observability | LangSmith tracing (optional) |
-| Frontend | Full dark-mode chat UI with source citations |
-| Deployment | Docker + docker-compose ready |
+| 📄 Document ingestion | PDF, TXT, Markdown via drag & drop |
+| 🧩 Smart chunking | 512 tokens, 64 overlap |
+| 🔢 Embeddings | HuggingFace `all-MiniLM-L6-v2` (free, local) |
+| 🗄️ Vector store | ChromaDB with MMR retrieval |
+| ⚡ LLM | Llama 3.1 8B via Groq (free, ~500ms) |
+| 📎 Source citations | Every answer shows source document |
+| 📊 Live stats | Docs indexed, avg latency, query count |
+| 🐳 Docker ready | One command deployment |
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone & setup
 ```bash
+# 1. Clone the repo
 git clone https://github.com/YOUR_USERNAME/rag-chatbot
 cd rag-chatbot
-cp .env.example .env
-# Add your OPENAI_API_KEY to .env
-```
 
-### 2. Run with the start script
-```bash
-bash scripts/start.sh
-```
-
-### 3. Or manually
-```bash
+# 2. Create virtual environment
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+venv\Scripts\activate
+
+# 3. Install dependencies
+pip install langchain langchain-community langchain-groq langchain-chroma chromadb sentence-transformers fastapi "uvicorn[standard]" python-multipart pydantic python-dotenv httpx pypdf
+
+# 4. Add your free Groq API key (console.groq.com)
+copy .env.example .env
+notepad .env
+
+# 5. Start server
 uvicorn app.main:app --reload
+
+# 6. Open frontend/index.html in browser
 ```
 
-### 4. Open the UI
-Open `frontend/index.html` in your browser, or serve it:
-```bash
-python -m http.server 3000 --directory frontend
-```
-Then visit `http://localhost:3000`
+---
+
+## 🏗️ Architecture
+User Question
+│
+▼
+Query Embedding     ← HuggingFace all-MiniLM-L6-v2 (local, free)
+│
+▼
+MMR Vector Search   ← ChromaDB (top-5 chunks)
+│
+▼
+Prompt Builder      ← Context + Question injected
+│
+▼
+Llama 3.1 (Groq)    ← Free API, ~500ms latency
+│
+▼
+Grounded Answer + Source Citations
 
 ---
 
 ## 📁 Project Structure
-
-```
 rag-chatbot/
 ├── app/
-│   ├── main.py           # FastAPI app & all endpoints
-│   ├── rag_pipeline.py   # Core RAG logic (ingest, embed, retrieve, generate)
-│   └── logger.py         # Structured logging
+│   ├── main.py           # FastAPI endpoints
+│   ├── rag_pipeline.py   # Core RAG logic
+│   └── logger.py         # Logging
 ├── frontend/
-│   └── index.html        # Full chat UI (no framework, pure HTML/JS)
+│   └── index.html        # Dark mode chat UI
 ├── tests/
-│   ├── evaluate.py       # RAGAS evaluation runner
-│   └── test_api.py       # Pytest unit tests
-├── scripts/
-│   └── start.sh          # One-command start
-├── data/                 # Drop your PDFs here
+│   └── evaluate.py       # RAGAS evaluation
+├── screenshots/          # Demo screenshots
+├── data/                 # Drop your documents here
 ├── .env.example
 ├── Dockerfile
-├── docker-compose.yml
-└── requirements.txt
-```
+└── docker-compose.yml
 
 ---
 
-## 🌐 API Reference
+## 🌐 API Endpoints
 
-### `GET /health`
-Returns server status and vector doc count.
-
-### `POST /chat`
-```json
-// Request
-{ "question": "What is RAG?" }
-
-// Response
-{
-  "answer": "RAG stands for...",
-  "sources": ["data/sample.txt"],
-  "latency_ms": 842.3,
-  "chunks_retrieved": 5
-}
-```
-
-### `POST /chat/stream`
-Same request body, returns Server-Sent Events for real-time streaming.
-
-### `POST /upload`
-Multipart form upload. Accepts `.pdf`, `.txt`, `.md`.
-
-### `GET /eval/run`
-Runs RAGAS evaluation and returns metric scores.
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Server status + doc count |
+| POST | `/chat` | Question → answer + sources |
+| POST | `/chat/stream` | Streaming SSE response |
+| POST | `/upload` | Upload and index a document |
+| GET | `/eval/run` | Run RAGAS evaluation |
 
 ---
 
-## 📊 Evaluation
-
-Run the full evaluation suite:
-```bash
-python tests/evaluate.py
-```
-
-Expected output:
-```
-faithfulness          0.9200  ████████████████████
-answer_relevancy      0.8800  ████████████████████
-context_recall        0.8500  ████████████████████
-context_precision     0.8700  ████████████████████
-```
-
-**Add these numbers to your resume!**
-
----
-
-## 🐳 Docker Deployment
-
-```bash
-# Build and run
-docker-compose up --build
-
-# In background
-docker-compose up -d
-```
-
-Drop your PDFs in `./data/` before starting — they'll be indexed automatically.
-
----
-
-## ☁️ Deploy to Render (Free)
+## ☁️ Deploy Free on Render
 
 1. Push to GitHub
-2. Create a new Web Service on [render.com](https://render.com)
-3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-5. Add `OPENAI_API_KEY` as an environment variable
-6. Done — you have a live demo URL for your resume!
-
----
-
-## 🔧 Configuration
-
-Key settings in `app/rag_pipeline.py`:
-
-| Variable | Default | Notes |
-|---|---|---|
-| `CHUNK_SIZE` | 512 | Tokens per chunk |
-| `CHUNK_OVERLAP` | 64 | Overlap between chunks |
-| `TOP_K` | 5 | Chunks retrieved per query |
-| `EMBED_MODEL` | `text-embedding-3-small` | Cheapest OpenAI embed model |
-| `LLM_MODEL` | `gpt-4o-mini` | Swap to `gpt-4o` for higher quality |
+2. New Web Service on [render.com](https://render.com)
+3. Build command: `pip install -r requirements.txt`
+4. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Add `GROQ_API_KEY` environment variable
+6. Live demo URL ready for your resume!
 
 ---
 
 ## 📝 Resume Bullet Points
 
-```
-• Built production RAG chatbot using LangChain, OpenAI embeddings (text-embedding-3-small),
-  and ChromaDB; achieved 0.92 RAGAS faithfulness and 0.88 answer relevancy scores.
+Built production RAG chatbot using LangChain, Llama-3.1 (Groq),
+HuggingFace embeddings, and ChromaDB achieving ~500ms avg latency
+with MMR retrieval and automatic source citations.
+Implemented FastAPI backend with PDF/TXT upload, vector indexing,
+and streaming SSE endpoint; containerized with Docker.
+Demonstrated on real resume PDF — system correctly retrieved and
+cited relevant chunks with grounded answers.
 
-• Implemented streaming FastAPI backend with document upload, MMR retrieval, and
-  Server-Sent Events for real-time token streaming; deployed via Docker on Render.
-
-• Added LangSmith observability for end-to-end query tracing and latency monitoring
-  across a custom RAGAS evaluation dataset of 20+ question-answer pairs.
-```
 
 ---
 
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
-- **LangChain** — RAG orchestration
-- **OpenAI** — Embeddings + GPT-4o-mini
-- **ChromaDB** — Local vector store
-- **FastAPI** — REST API
-- **RAGAS** — LLM evaluation framework
-- **LangSmith** — Tracing & observability
-- **Docker** — Containerisation
+`LangChain` · `Groq (Llama 3.1)` · `ChromaDB` · `HuggingFace` · `FastAPI` · `Docker`
 
 ---
 
 ## 📄 License
 
-MIT — free to use, modify, and put on your resume.
+MIT
