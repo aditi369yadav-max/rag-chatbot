@@ -1,0 +1,29 @@
+# Core RAG stack
+langchain==0.2.16
+langchain-openai==0.1.25
+langchain-community==0.2.16
+langchain-chroma==0.1.4
+chromadb==0.5.5
+openai==1.47.0
+
+# Document loaders
+pypdf==4.3.1
+unstructured==0.15.7
+
+# API
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+
+# Evaluation
+ragas==0.1.19
+datasets==2.21.0
+
+# Observability (optional)
+langsmith==0.1.126
+
+# Utilities
+python-dotenv==1.0.1
+pytest==8.3.3
+httpx==0.27.2

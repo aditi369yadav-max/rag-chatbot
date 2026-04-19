@@ -1,0 +1,26 @@
+RAG Chatbot Documentation
+
+This is a production-grade Retrieval-Augmented Generation (RAG) chatbot.
+
+How it works:
+RAG combines the power of large language models with a searchable knowledge
+base. When you ask a question, the system retrieves the most relevant document
+chunks using vector similarity search, then passes those chunks as context to
+the LLM to generate a grounded answer.
+
+Key Components:
+1. Document Ingestion: PDFs, TXT, and Markdown files are loaded and chunked.
+2. Embedding: Each chunk is converted to a vector using HuggingFace
+   all-MiniLM-L6-v2 model which runs locally and is completely free.
+3. Vector Store: ChromaDB stores and indexes all embeddings.
+4. Retrieval: Top-5 most similar chunks retrieved per query using MMR.
+5. Generation: Llama3 via Groq generates the final answer using free API.
+6. Evaluation: RAGAS metrics measure faithfulness and relevancy.
+
+How to add your own documents:
+Use the upload endpoint to add PDF, TXT, or Markdown files to the chatbot.
+
+Evaluation Metrics:
+Faithfulness measures if the answer is grounded in the retrieved context.
+Answer Relevancy measures if the answer addresses the question asked.
+Context Recall measures if the right chunks were retrieved for the query.
